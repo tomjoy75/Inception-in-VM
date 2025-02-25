@@ -1,0 +1,47 @@
+#version: '3.8'
+name: inception
+
+services:
+  adminer:
+    image: inception-adminer
+    build: ./requirements/bonus/adminer
+    container_name: adminer
+    expose:
+      - "8080"
+    networks:
+      - inception
+    environment:
+      - ENABLE_BONUS=true
+    restart: always
+    depends_on:
+      - mariadb
+  redis:
+    image: inception-redis
+    build: ./requirements/bonus/redis
+    container_name: redis
+    expose:
+      - "6379"
+    networks:
+      - inception
+    restart: always
+    environment:
+      - ENABLE_BONUS=true
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    environment:
+      - ENABLE_BONUS=true
+  wordpress:
+    environment:
+      - ENABLE_BONUS=true
+    depends_on:
+      redis:
+        condition: service_healthy
+
+networks:
+  inception:
+    external: true
